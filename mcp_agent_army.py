@@ -220,54 +220,28 @@ async def use_firecrawl_agent(query: str) -> dict[str, str]:
     result = await firecrawl_agent.run(query)
     return {"result": result.data}
 
-# ========== Main execution function ==========
-
-async def main():
-    """Run the primary agent with a given query."""
-    print("MCP Agent Army - Multi-agent system using Model Context Protocol")
-    print("Enter 'exit' to quit the program.")
+async def get_mcp_agent_army():
+    """
+    Initialize and return the primary agent with all MCP servers running.
+    This function sets up an AsyncExitStack and starts all MCP servers,
+    then returns the primary agent ready to use.
     
-    # Use AsyncExitStack to manage all MCP servers in one context
-    async with AsyncExitStack() as stack:
-        # Start all the subagent MCP servers
-        print("Starting MCP servers...")
-        await stack.enter_async_context(airtable_agent.run_mcp_servers())
-        await stack.enter_async_context(brave_agent.run_mcp_servers())
-        await stack.enter_async_context(filesystem_agent.run_mcp_servers())
-        await stack.enter_async_context(github_agent.run_mcp_servers())
-        await stack.enter_async_context(slack_agent.run_mcp_servers())
-        await stack.enter_async_context(firecrawl_agent.run_mcp_servers())
-        print("All MCP servers started successfully!")
-
-        console = Console()
-        messages = []        
-        
-        while True:
-            # Get user input
-            user_input = input("\n[You] ")
-            
-            # Check if user wants to exit
-            if user_input.lower() in ['exit', 'quit', 'bye', 'goodbye']:
-                print("Goodbye!")
-                break
-            
-            try:
-                # Process the user input and output the response
-                print("\n[Assistant]")
-                with Live('', console=console, vertical_overflow='visible') as live:
-                    async with primary_agent.run_stream(
-                        user_input, message_history=messages
-                    ) as result:
-                        curr_message = ""
-                        async for message in result.stream_text(delta=True):
-                            curr_message += message
-                            live.update(Markdown(curr_message))
-                    
-                    # Add the new messages to the chat history
-                    messages.extend(result.all_messages())
-                
-            except Exception as e:
-                print(f"\n[Error] An error occurred: {str(e)}")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    Returns:
+        tuple: (primary_agent, stack) - The primary agent and the AsyncExitStack
+              that must be kept alive to maintain the MCP server connections
+    """
+    # Create a new AsyncExitStack that will be returned to the caller
+    stack = AsyncExitStack()
+    
+    # Start all the subagent MCP servers
+    print("Starting MCP servers...")
+    await stack.enter_async_context(airtable_agent.run_mcp_servers())
+    await stack.enter_async_context(brave_agent.run_mcp_servers())
+    await stack.enter_async_context(filesystem_agent.run_mcp_servers())
+    await stack.enter_async_context(github_agent.run_mcp_servers())
+    await stack.enter_async_context(slack_agent.run_mcp_servers())
+    await stack.enter_async_context(firecrawl_agent.run_mcp_servers())
+    print("All MCP servers started successfully!")
+    
+    # Return both the primary agent and the stack
+    return primary_agent, stack
