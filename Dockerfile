@@ -16,4 +16,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE ${PORT}
 
 # Command to run the application
-CMD ["sh", "-c", "uvicorn pydantic_mcp_agent_endpoint:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn mcp_agent_army_endpoint:app --host 0.0.0.0 --port ${PORT}"]
