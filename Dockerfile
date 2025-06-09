@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Install Node.js and npx
+RUN apt-get update && apt-get install -y nodejs npm && npm install -g npx
+
 # Build argument for port with default value
 ARG PORT=8001
 ENV PORT=${PORT}
